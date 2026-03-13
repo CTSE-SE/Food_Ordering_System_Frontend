@@ -3,7 +3,7 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 interface Column {
   header: string;
   accessor: string;
-  cell?: (value: any) => React.ReactNode;
+  cell?: (value: any, row: any) => React.ReactNode;
 }
 
 interface TableProps {
@@ -35,12 +35,12 @@ const Table = ({ columns, data, onEdit, onDelete }: TableProps) => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((item, rowIndex) => (
+          {Array.isArray(data) && data.map((item, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-gray-50">
               {columns.map((column, colIndex) => (
                 <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
                   {column.cell
-                    ? column.cell(item[column.accessor])
+                    ? column.cell(item[column.accessor], item)
                     : item[column.accessor]}
                 </td>
               ))}

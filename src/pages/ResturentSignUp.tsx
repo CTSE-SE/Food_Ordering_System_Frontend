@@ -188,7 +188,7 @@ const SignUp = () => {
 
         // 2. Create Restaurant with the token
         const restaurantData = {
-          restaurantName: formData.restaurantName,
+          name: formData.restaurantName,
           contactPerson: formData.contactPerson,
           phoneNumber: formData.phoneNumber,
           email: formData.email,
@@ -205,7 +205,7 @@ const SignUp = () => {
           agreeTerms: formData.agreeTerms
         };
 
-        const restaurantResponse = await createRestaurant(restaurantData, token);
+        const restaurantResponse = await createRestaurant(restaurantData);
 
         if (restaurantResponse) {
           toast.success("Restaurant registered successfully!");

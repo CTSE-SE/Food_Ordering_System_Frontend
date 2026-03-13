@@ -1,291 +1,207 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import customFetch from "@/utils/customFetch";
 import Table from "@/components/Table/Table";
 import Modal from "@/components/UI/Modal";
-import axios from "axios";
 import { BounceLoader } from "react-spinners";
-import { generatePDF } from "@/utils/pdfGenerator";
+import {
+  getMenuItemsByRestaurantId,
+  getCategoriesByRestaurantId,
+  createMenu,
+  updateMenu,
+  deleteMenu,
+  toggleMenuAvailability,
+  getMyRestaurant,
+  Menu,
+  Category
+} from "@/api/restaurant.api";
+import { FiPlus, FiBox } from "react-icons/fi";
 
-interface Staff {
-  _id: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  role: string;
-  experience: number;
-  availability: boolean;
-}
-
-const Users = () => {
-  const [users, setUsers] = useState<{ staffList: Staff[] }>({ staffList: [] });
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<Staff | null>(null);
+const MenuPage = () => {
+  const [menuItems, setMenuItems] = useState<Menu[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Menu | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addFormData, setAddFormData] = useState<Staff>({
-    _id: "",
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    experience: 0,
-    availability: true,
-    role: "Other",
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: 0,
+    categoryId: "",
+    isAvailable: true,
   });
-  const [addFormErrors, setAddFormErrors] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    experience: "",
-    role: "",
+
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    price: "",
+    categoryId: "",
   });
-  const [editFormData, setEditFormData] = useState({
-    _id: "",
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    experience: 0,
-    availability: true,
-    role: "user",
-  });
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const columns = [
-    { header: "Name", accessor: "fullName" },
-    { header: "Email", accessor: "email" },
-    { header: "Phone", accessor: "phoneNumber" },
-    { header: "Experience", accessor: "experience" },
+    { header: "Name", accessor: "name" },
     {
-      header: "Availability",
-      accessor: "availability",
-      cell: (value: boolean) => (
-        <span className={value ? "text-green-600" : "text-red-600"}>
-          {value ? "Available" : "Unavailable"}
-        </span>
-      ),
+      header: "Category",
+      accessor: "categoryId",
+      cell: (value: string) => categories.find(c => c.id === value)?.name || "Unknown"
     },
     {
-      header: "Role",
-      accessor: "role",
-      cell: (value: string) => (
-        <span className="capitalize px-2 py-1 text-xs rounded-full bg-gray-100">
-          {value}
-        </span>
+      header: "Price",
+      accessor: "price",
+      cell: (value: number) => `Rs ${value.toLocaleString()}`
+    },
+    {
+      header: "Availability",
+      accessor: "isAvailable",
+      cell: (value: boolean, row: Menu) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggleAvailability(row);
+          }}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            }`}
+        >
+          {value ? "Available" : "Unavailable"}
+        </button>
       ),
     },
   ];
 
-  // fetch staff
-  const fetchUsers = async () => {
+  const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data } = await customFetch.get("/admin/staff");
-      setUsers(data || { staffList: [] });
-      console.log(data);
+      const restResponse = await getMyRestaurant();
+      if (restResponse.success) {
+        setRestaurantId(restResponse.data.id);
+        const [menuRes, catRes] = await Promise.all([
+          getMenuItemsByRestaurantId(restResponse.data.id),
+          getCategoriesByRestaurantId(restResponse.data.id)
+        ]);
+
+        if (menuRes.success) setMenuItems(menuRes.data);
+        if (catRes.success) setCategories(catRes.data);
+      }
     } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users");
+      console.error("Error fetching menu data:", error);
+      toast.error("Failed to load menu items");
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const refreshMenu = async () => {
+    if (!restaurantId) return;
+    try {
+      const response = await getMenuItemsByRestaurantId(restaurantId);
+      if (response.success) setMenuItems(response.data);
+    } catch (error) {
+      console.error("Error refreshing menu:", error);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
-  const handleEdit = (user: Staff) => {
-    setSelectedUser(user);
-    setEditFormData(user);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDelete = (user: Staff) => {
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
-  };
-
-  // edit staff members
-  const handleEditSubmit = async () => {
-    if (!selectedUser || !editFormData) return;
-
-    if (editFormData.experience < 0) {
-      toast.error("Experience cannot be negative");
-      return;
-    }
-
-    try {
-      await customFetch.patch(`/admin/staff/${selectedUser._id}`, editFormData);
-      toast.success("User updated successfully");
-      setIsEditModalOpen(false);
-      fetchUsers();
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user");
-    }
-  };
-
-  // delete staff member
-  const handleDeleteConfirm = async () => {
-    if (!selectedUser) return;
-
-    try {
-      await customFetch.delete(`/admin/staff/${selectedUser._id}`);
-      toast.success("User deleted successfully");
-      setIsDeleteModalOpen(false);
-      fetchUsers();
-    } catch (error) {
-      toast.error("Failed to delete user");
-      console.log(error);
-    }
-  };
-
-  // validation form
-  const validateAddForm = () => {
-    const errors = {
-      fullName: "",
-      email: "",
-      phoneNumber: "",
-      experience: "",
-      role: "",
-    };
+  const validateForm = () => {
+    const errors = { name: "", price: "", categoryId: "" };
     let isValid = true;
 
-    // Full Name validation
-    if (!addFormData.fullName.trim()) {
-      errors.fullName = "Full name is required";
+    if (!formData.name.trim()) {
+      errors.name = "Item name is required";
+      isValid = false;
+    }
+    if (formData.price <= 0) {
+      errors.price = "Price must be greater than 0";
+      isValid = false;
+    }
+    if (!formData.categoryId) {
+      errors.categoryId = "Category is required";
       isValid = false;
     }
 
-    // Email validation
-    if (!addFormData.email.trim()) {
-      errors.email = "Email is required";
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addFormData.email)) {
-      errors.email = "Please enter a valid email address";
-      isValid = false;
-    }
-
-    // Phone Number validation
-    if (!addFormData.phoneNumber.trim()) {
-      errors.phoneNumber = "Phone number is required";
-      isValid = false;
-    } else if (!/^0\d{9}$/.test(addFormData.phoneNumber)) {
-      errors.phoneNumber =
-        "Phone number must start with 0 and be exactly 10 digits";
-      isValid = false;
-    }
-
-    // Experience validation
-    if (addFormData.experience < 0) {
-      errors.experience = "Experience cannot be negative";
-      isValid = false;
-    }
-
-    // Role validation
-    if (!addFormData.role) {
-      errors.role = "Role is required";
-      isValid = false;
-    }
-
-    setAddFormErrors(errors);
+    setFormErrors(errors);
     return isValid;
   };
 
-  // add staff memebr
-  const handleAddUser = async () => {
-    if (!validateAddForm()) {
-      return;
-    }
+  const handleAddSubmit = async () => {
+    if (!validateForm() || !restaurantId) return;
 
     try {
-      const payload = {
-        fullName: addFormData.fullName,
-        email: addFormData.email,
-        phoneNumber: addFormData.phoneNumber,
-        role: addFormData.role,
-        experience: addFormData.experience,
-        availability: addFormData.availability,
-      };
-
-      const response = await customFetch.post("/admin/staff", payload);
-      console.log("Response:", response.data);
-      toast.success("User added successfully");
-      setIsAddModalOpen(false);
-      setAddFormData({
-        _id: "",
-        fullName: "",
-        email: "",
-        phoneNumber: "",
-        experience: 0,
-        availability: true,
-        role: "Other",
-      });
-      setAddFormErrors({
-        fullName: "",
-        email: "",
-        phoneNumber: "",
-        experience: "",
-        role: "",
-      });
-      fetchUsers();
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        // Check for duplicate email error
-        if (
-          error.response.data?.error?.includes("duplicate key error") &&
-          error.response.data?.error?.includes("email")
-        ) {
-          toast.error("This email is already registered");
-        } else {
-          const errorMessage = error.response.data?.msg || "Failed to add user";
-          toast.error(errorMessage);
-        }
-        console.error("Error details:", error.response.data);
-      } else {
-        console.error("Unexpected error:", error);
-        toast.error("An unexpected error occurred");
+      const response = await createMenu(restaurantId, formData);
+      if (response.success) {
+        toast.success("Menu item created");
+        setIsAddModalOpen(false);
+        setFormData({ name: "", description: "", price: 0, categoryId: "", isAvailable: true });
+        refreshMenu();
       }
+    } catch (error) {
+      toast.error("Failed to create menu item");
     }
   };
 
-  //handle pdf function
-  const handleExportPDF = () => {
-    const pdfColumns = [
-      { header: "Name", dataKey: "fullName" as const },
-      { header: "Email", dataKey: "email" as const },
-      { header: "Phone", dataKey: "phoneNumber" as const },
-      { header: "Role", dataKey: "role" as const },
-      { header: "Experience (Years)", dataKey: "experienceText" as const },
-      { header: "Availability", dataKey: "availabilityText" as const },
-    ];
-
-    const formattedData = filteredStaff.map((staff) => ({
-      fullName: staff.fullName,
-      email: staff.email,
-      phoneNumber: staff.phoneNumber,
-      role: staff.role,
-      experienceText: `${staff.experience} years`,
-      availabilityText: staff.availability ? "Available" : "Not Available",
-    }));
-
-    generatePDF({
-      title: "Staff Report",
-      data: formattedData,
-      filename: `staff-report-${new Date().toISOString().split("T")[0]}.pdf`,
-      columns: pdfColumns,
+  const handleEdit = (item: Menu) => {
+    setSelectedItem(item);
+    setFormData({
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      categoryId: item.categoryId,
+      isAvailable: item.isAvailable,
     });
+    setIsEditModalOpen(true);
   };
 
-  const filteredStaff = users.staffList.filter((user) => {
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesSearch = user.fullName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesRole && matchesSearch;
-  });
+  const handleEditSubmit = async () => {
+    if (!selectedItem || !restaurantId || !validateForm()) return;
+
+    try {
+      const response = await updateMenu(restaurantId, selectedItem.id, formData);
+      if (response.success) {
+        toast.success("Menu item updated");
+        setIsEditModalOpen(false);
+        refreshMenu();
+      }
+    } catch (error) {
+      toast.error("Failed to update menu item");
+    }
+  };
+
+  const handleDelete = (item: Menu) => {
+    setSelectedItem(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedItem || !restaurantId) return;
+
+    try {
+      const response = await deleteMenu(restaurantId, selectedItem.id);
+      if (response.success) {
+        toast.success("Item deleted");
+        setIsDeleteModalOpen(false);
+        refreshMenu();
+      }
+    } catch (error) {
+      toast.error("Failed to delete item");
+    }
+  };
+
+  const handleToggleAvailability = async (item: Menu) => {
+    if (!restaurantId) return;
+    try {
+      const response = await toggleMenuAvailability(restaurantId, item.id);
+      if (response.success) {
+        toast.success(`Item is now ${response.data.isAvailable ? 'available' : 'unavailable'}`);
+        refreshMenu();
+      }
+    } catch (error) {
+      toast.error("Failed to toggle availability");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -299,211 +215,127 @@ const Users = () => {
     <div className="p-6">
       <Toaster position="top-center" />
       <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
+          <FiBox className="mr-2" /> Menu Items
+        </h2>
         <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-event-red hover:bg-red-700 text-white px-4 py-2 rounded-md"
+          onClick={() => {
+            if (categories.length === 0) {
+              toast.error("Please create a category first");
+              return;
+            }
+            setFormData({ name: "", description: "", price: 0, categoryId: categories[0].id, isAvailable: true });
+            setIsAddModalOpen(true);
+          }}
+          className="bg-event-red hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center transition-colors"
         >
-          + Add Staff Member
+          <FiPlus className="mr-2" /> Add Menu Item
         </button>
-        <button
-          onClick={handleExportPDF}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-        >
-          Export PDF
-        </button>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Search:</span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Enter name..."
-              className="px-4 py-2 border rounded-md focus:border-event-red focus:ring-1 focus:ring-event-red"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Filter by Role:</span>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-4 py-2 border rounded-md focus:border-event-red focus:ring-1 focus:ring-event-red"
-            >
-              <option value="all">All Roles</option>
-              <option value="Event Manager">Event Manager</option>
-              <option value="Photography Infomation Manager">
-                Photography Information Manager
-              </option>
-              <option value="Event Orgernizer">Event Organizer</option>
-              <option value="Financial Officer">Financial Officer</option>
-              <option value="Entertainment Manager">
-                Entertainment Manager
-              </option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <Table
         columns={columns}
-        data={filteredStaff} // Use filteredStaff instead of inline filter
+        data={menuItems}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
 
-      {/* Edit Modal */}
       <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Staff"
+        isOpen={isAddModalOpen || isEditModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setIsEditModalOpen(false);
+        }}
+        title={isAddModalOpen ? "Add Menu Item" : "Edit Menu Item"}
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={editFormData?.fullName}
-              onChange={(e) =>
-                setEditFormData({ ...editFormData!, fullName: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-md border border-gray-300 bg-gray-100 cursor-not-allowed"
-              disabled
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={`w-full px-4 py-2 rounded-md border ${formErrors.name ? "border-red-500" : "border-gray-300"} focus:ring-1 focus:ring-event-red`}
+              />
+              {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <select
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                className={`w-full px-4 py-2 rounded-md border ${formErrors.categoryId ? "border-red-500" : "border-gray-300"} focus:ring-1 focus:ring-event-red`}
+              >
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={editFormData?.phoneNumber}
-              onChange={(e) =>
-                setEditFormData({
-                  ...editFormData!,
-                  phoneNumber: e.target.value,
-                })
-              }
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:border-event-red focus:ring-1 focus:ring-event-red"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={editFormData?.email}
-              onChange={(e) =>
-                setEditFormData({ ...editFormData!, email: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:border-event-red focus:ring-1 focus:ring-event-red"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Experience
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Price (Rs)</label>
             <input
               type="number"
-              value={editFormData?.experience}
-              onChange={(e) =>
-                setEditFormData({
-                  ...editFormData!,
-                  experience: Number(e.target.value),
-                })
-              }
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:border-event-red focus:ring-1 focus:ring-event-red"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+              className={`w-full px-4 py-2 rounded-md border ${formErrors.price ? "border-red-500" : "border-gray-300"} focus:ring-1 focus:ring-event-red`}
+            />
+            {formErrors.price && <p className="mt-1 text-sm text-red-500">{formErrors.price}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-1 focus:ring-event-red"
+              rows={3}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              value={editFormData?.role}
-              onChange={(e) =>
-                setEditFormData({ ...editFormData!, role: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-md border border-gray-300 bg-gray-100 cursor-not-allowed"
-              disabled
-            >
-              <option value="Event Manager">Event Manager</option>
-              <option value="Photography Infomation Manager">
-                Photography Information Manager
-              </option>
-              <option value="Event Orgernizer">Event Organizer</option>
-              <option value="Financial Officer">Financial Officer</option>
-              <option value="Entertainment Manager">
-                Entertainment Manager
-              </option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="availability"
-                value="true"
-                checked={editFormData?.availability === true}
-                onChange={() =>
-                  setEditFormData({ ...editFormData, availability: true })
-                }
-                className="h-4 w-4 text-blue-600"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Available
-              </span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="availability"
-                value="false"
-                checked={editFormData?.availability === false}
-                onChange={() =>
-                  setEditFormData({ ...editFormData, availability: false })
-                }
-                className="h-4 w-4 text-red-600"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Unavailable
-              </span>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isAvailable"
+              checked={formData.isAvailable}
+              onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
+              className="h-4 w-4 text-event-red focus:ring-event-red border-gray-300 rounded"
+            />
+            <label htmlFor="isAvailable" className="ml-2 block text-sm text-gray-900 font-medium">
+              Available for delivery
             </label>
           </div>
+
           <div className="flex justify-end space-x-4 mt-6">
             <button
-              onClick={() => setIsEditModalOpen(false)}
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setIsEditModalOpen(false);
+              }}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
-              onClick={handleEditSubmit}
-              className="px-4 py-2 bg-event-red text-white rounded-md hover:bg-red-700"
+              onClick={isAddModalOpen ? handleAddSubmit : handleEditSubmit}
+              className="px-4 py-2 bg-event-red text-white rounded-md hover:bg-red-700 transition-colors"
             >
-              Save Changes
+              {isAddModalOpen ? "Create Item" : "Save Changes"}
             </button>
           </div>
         </div>
       </Modal>
 
-      {/* Delete Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete User"
+        title="Delete Item"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete this user? This action cannot be
-            undone.
+            Are you sure you want to delete <strong>{selectedItem?.name}</strong>?
           </p>
           <div className="flex justify-end space-x-4 mt-6">
             <button
@@ -521,203 +353,8 @@ const Users = () => {
           </div>
         </div>
       </Modal>
-
-      {/* Add User Modal */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setAddFormData({
-            _id: "",
-            fullName: "",
-            email: "",
-            phoneNumber: "",
-            experience: 0,
-            availability: true,
-            role: "Other",
-          });
-          setAddFormErrors({
-            fullName: "",
-            email: "",
-            phoneNumber: "",
-            experience: "",
-            role: "",
-          });
-        }}
-        title="Add New User"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={addFormData.fullName}
-              onChange={(e) => {
-                setAddFormData({ ...addFormData, fullName: e.target.value });
-                setAddFormErrors({ ...addFormErrors, fullName: "" });
-              }}
-              className={`w-full px-4 py-2 rounded-md border ${
-                addFormErrors.fullName ? "border-red-500" : "border-gray-300"
-              } focus:border-event-red focus:ring-1 focus:ring-event-red`}
-            />
-            {addFormErrors.fullName && (
-              <p className="mt-1 text-sm text-red-500">
-                {addFormErrors.fullName}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={addFormData.email}
-              onChange={(e) => {
-                setAddFormData({ ...addFormData, email: e.target.value });
-                setAddFormErrors({ ...addFormErrors, email: "" });
-              }}
-              className={`w-full px-4 py-2 rounded-md border ${
-                addFormErrors.email ? "border-red-500" : "border-gray-300"
-              } focus:border-event-red focus:ring-1 focus:ring-event-red`}
-            />
-            {addFormErrors.email && (
-              <p className="mt-1 text-sm text-red-500">{addFormErrors.email}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={addFormData.phoneNumber}
-              onChange={(e) => {
-                // Only allow numbers and limit to 10 digits
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 10) {
-                  setAddFormData({ ...addFormData, phoneNumber: value });
-                  setAddFormErrors({ ...addFormErrors, phoneNumber: "" });
-                }
-              }}
-              className={`w-full px-4 py-2 rounded-md border ${
-                addFormErrors.phoneNumber ? "border-red-500" : "border-gray-300"
-              } focus:border-event-red focus:ring-1 focus:ring-event-red`}
-              placeholder="0712345678"
-              maxLength={10}
-            />
-            {addFormErrors.phoneNumber && (
-              <p className="mt-1 text-sm text-red-500">
-                {addFormErrors.phoneNumber}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Experience
-            </label>
-            <input
-              type="number"
-              value={addFormData.experience}
-              onChange={(e) => {
-                setAddFormData({
-                  ...addFormData,
-                  experience: Number(e.target.value),
-                });
-                setAddFormErrors({ ...addFormErrors, experience: "" });
-              }}
-              className={`w-full px-4 py-2 rounded-md border ${
-                addFormErrors.experience ? "border-red-500" : "border-gray-300"
-              } focus:border-event-red focus:ring-1 focus:ring-event-red`}
-              min="0"
-            />
-            {addFormErrors.experience && (
-              <p className="mt-1 text-sm text-red-500">
-                {addFormErrors.experience}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              value={addFormData.role}
-              onChange={(e) => {
-                setAddFormData({ ...addFormData, role: e.target.value });
-                setAddFormErrors({ ...addFormErrors, role: "" });
-              }}
-              className={`w-full px-4 py-2 rounded-md border ${
-                addFormErrors.role ? "border-red-500" : "border-gray-300"
-              } focus:border-event-red focus:ring-1 focus:ring-event-red`}
-            >
-              <option value="Event Manager">Event Manager</option>
-              <option value="Photography Infomation Manager">
-                Photography Information Manager
-              </option>
-              <option value="Event Orgernizer">Event Organizer</option>
-              <option value="Financial Officer">Financial Officer</option>
-              <option value="Entertainment Manager">
-                Entertainment Manager
-              </option>
-              <option value="Other">Other</option>
-            </select>
-            {addFormErrors.role && (
-              <p className="mt-1 text-sm text-red-500">{addFormErrors.role}</p>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="availability"
-                value="true"
-                checked={addFormData.availability === true}
-                onChange={() =>
-                  setAddFormData({ ...addFormData, availability: true })
-                }
-                className="h-4 w-4 text-blue-600"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Available
-              </span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="availability"
-                value="false"
-                checked={addFormData.availability === false}
-                onChange={() =>
-                  setAddFormData({ ...addFormData, availability: false })
-                }
-                className="h-4 w-4 text-red-600"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Unavailable
-              </span>
-            </label>
-          </div>
-          <div className="flex justify-end space-x-4 mt-6">
-            <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAddUser}
-              className="px-4 py-2 bg-event-red text-white rounded-md hover:bg-red-700"
-            >
-              Add User
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };
 
-export default Users;
+export default MenuPage;
