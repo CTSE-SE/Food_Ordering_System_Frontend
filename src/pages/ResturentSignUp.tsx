@@ -163,7 +163,7 @@ const SignUp = () => {
         password: formData.password,
         phone: formData.phoneNumber,
         address: `${formData.streetAddress}, ${formData.city}, ${formData.state}, ${formData.country}`,
-        role: "resturentowner"
+        role: "resturent owner"
       });
 
       let token = authResponse?.token;
@@ -210,7 +210,7 @@ const SignUp = () => {
         if (restaurantResponse) {
           toast.success("Restaurant registered successfully!");
           setTimeout(() => {
-            navigate("/resturent"); // Redirecting to restaurant dashboard
+            navigate("/restaurant-dashboard"); // Redirecting to restaurant dashboard
             window.location.reload();
           }, 1500);
         }

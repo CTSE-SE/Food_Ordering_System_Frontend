@@ -18,7 +18,7 @@ module.exports = {
     },
     extend: {
       colors: {
-        // EventPro Custom Colors
+        // Custom Colors
         "event-red": "#EE1133",
         "event-navy": "#1A2B4C",
         "event-white": "#FFFFFF",
