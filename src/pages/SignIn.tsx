@@ -6,7 +6,7 @@ import { IoEyeOutline } from "react-icons/io5";
 import { IoEyeOffOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import customFetch from "../utils/customFetch";
+import { signIn } from "../api/user.api";
 import axios from "axios";
 
 function SignIn() {
@@ -70,24 +70,36 @@ function SignIn() {
 
     setIsLoading(true);
     try {
-      const response = await customFetch.post("/auth/login", {
+      const response = await signIn({
         email,
         password,
       });
 
-      if (response.data) {
-        toast.success("Login successful!");
+      if (response) {
+        if (response.token) {
+          localStorage.setItem("token", response.token);
+        }
+        if (response.user) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+        }
+
+        toast.success(response.message || "Login successful!");
 
         // Delay navigation to show toast
         setTimeout(() => {
           // Navigate based on user role
-          switch (response.data.user.role) {
+          const role = response.user?.role || "customer";
+          switch (role) {
             case "admin":
               navigate("/");
               window.location.reload();
               break;
-            case "user":
+            case "customer":
               navigate("/");
+              window.location.reload();
+              break;
+            case "resturentowner":
+              navigate("/resturent");
               window.location.reload();
               break;
             default:
@@ -98,7 +110,7 @@ function SignIn() {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.msg || "Login failed";
+        const errorMessage = error.response?.data?.message || error.response?.data?.msg || "Login failed";
         toast.error(errorMessage);
       } else {
         toast.error("Something went wrong. Please try again.");

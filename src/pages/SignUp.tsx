@@ -6,7 +6,7 @@ import { IoEyeOutline } from "react-icons/io5";
 import { IoEyeOffOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import customFetch from "@/utils/customFetch";
+import { signUp } from "../api/user.api";
 import axios from "axios";
 
 const SignUp = () => {
@@ -18,16 +18,16 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    phoneNumber: "",
-    location: "",
+    phone: "",
+    address: "",
   });
   const [errors, setErrors] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    phoneNumber: "",
-    location: "",
+    phone: "",
+    address: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -76,17 +76,17 @@ const SignUp = () => {
 
     // Phone validation
     const phoneRegex = /^0[0-9]{9}$/;
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "Phone number is required";
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required";
       isValid = false;
-    } else if (!phoneRegex.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Please enter a valid 10-digit phone number starting with 0";
+    } else if (!phoneRegex.test(formData.phone)) {
+      newErrors.phone = "Please enter a valid 10-digit phone number starting with 0";
       isValid = false;
     }
 
-    // Location validation
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
+    // Address validation
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required";
       isValid = false;
     }
 
@@ -120,15 +120,16 @@ const SignUp = () => {
 
     setIsLoading(true);
     try {
-      const response = await customFetch.post("/auth/register", {
+      const response = await signUp({
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
-        phoneNumber: formData.phoneNumber,
-        location: formData.location,
+        phone: formData.phone,
+        address: formData.address,
+        role: "customer"
       });
 
-      if (response.data) {
+      if (response) {
         toast.success("Registration successful!");
         setTimeout(() => {
           navigate("/signin");
@@ -136,7 +137,7 @@ const SignUp = () => {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.msg || "Registration failed";
+        const errorMessage = error.response?.data?.message || error.response?.data?.msg || "Registration failed";
         toast.error(errorMessage);
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -217,38 +218,38 @@ const SignUp = () => {
           <div className="mt-[32px]">
             <input
               type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
+              name="phone"
+              value={formData.phone}
               onChange={handleInputChange}
               placeholder="Phone Number"
-              className={`w-full text-[14px] font-PlusSans placeholder:text-[#646464] text-black leading-[24px] font-normal focus:outline-none ${errors.phoneNumber ? "text-red-500" : ""
+              className={`w-full text-[14px] font-PlusSans placeholder:text-[#646464] text-black leading-[24px] font-normal focus:outline-none ${errors.phone ? "text-red-500" : ""
                 }`}
             />
             <div
-              className={`h-[1px] w-full ${errors.phoneNumber ? "bg-red-500" : "bg-[#000]"
+              className={`h-[1px] w-full ${errors.phone ? "bg-red-500" : "bg-[#000]"
                 } mt-[4px]`}
             ></div>
-            {errors.phoneNumber && (
-              <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
             )}
           </div>
 
           <div className="mt-[32px]">
             <input
               type="text"
-              name="location"
-              value={formData.location}
+              name="address"
+              value={formData.address}
               onChange={handleInputChange}
-              placeholder="Location"
-              className={`w-full text-[14px] font-PlusSans placeholder:text-[#646464] text-black leading-[24px] font-normal focus:outline-none ${errors.location ? "text-red-500" : ""
+              placeholder="Address"
+              className={`w-full text-[14px] font-PlusSans placeholder:text-[#646464] text-black leading-[24px] font-normal focus:outline-none ${errors.address ? "text-red-500" : ""
                 }`}
             />
             <div
-              className={`h-[1px] w-full ${errors.location ? "bg-red-500" : "bg-[#000]"
+              className={`h-[1px] w-full ${errors.address ? "bg-red-500" : "bg-[#000]"
                 } mt-[4px]`}
             ></div>
-            {errors.location && (
-              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+            {errors.address && (
+              <p className="text-red-500 text-xs mt-1">{errors.address}</p>
             )}
           </div>
 
@@ -369,6 +370,15 @@ const SignUp = () => {
               onClick={() => navigate("/signin")}
             >
               Sign In
+            </span>
+          </h1>
+          <h1 className="flex items-center justify-center mt-[12px] font-PlusSans text-[#646464] text-sm leading-6 ">
+            Register?{" "}
+            <span
+              className="text-event-navy font-semibold hover:text-[#000] ml-2.5 hover:underline cursor-pointer"
+              onClick={() => navigate("/restaurant-signup")}
+            >
+              As a restaurant
             </span>
           </h1>
         </div>

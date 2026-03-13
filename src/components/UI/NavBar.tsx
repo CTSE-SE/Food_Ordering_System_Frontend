@@ -1,12 +1,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdMenu, MdClose } from "react-icons/md";
-import { FiLogIn, FiUserPlus, FiLogOut, FiUser } from "react-icons/fi";
+import { FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
 import logo from "/Images/NavBar/logo.webp?url";
 import ContactInfo from "@/components/UI/ContactInfo";
 import CustomButton from "@/components/UI/Button";
 
-import customFetch from "@/utils/customFetch";
 import { toast } from "react-hot-toast";
 import Modal from "@/components/UI/Modal";
 
@@ -82,16 +81,17 @@ function NavComponent() {
 
   // Fetch current user
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
       try {
-        const { data } = await customFetch.get("/users/current-user");
-        setCurrentUser(data.user);
+        setCurrentUser(JSON.parse(userStr));
       } catch (error) {
-        console.error("Error fetching user:", error);
+        console.error("Error parsing user from local storage:", error);
         setCurrentUser(null);
       }
-    };
-    getCurrentUser();
+    } else {
+      setCurrentUser(null);
+    }
   }, []);
 
   const toggleDropdown = (title: string) => {
@@ -128,7 +128,10 @@ function NavComponent() {
 
   const handleLogout = async () => {
     try {
-      await customFetch.post("/auth/logout");
+      // Clear user data from local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
       setCurrentUser(null);
       setIsLogoutModalOpen(false);
       toast.success("Logged out successfully");
@@ -224,22 +227,6 @@ function NavComponent() {
         <div className="hidden xl:flex items-center gap-x-4">
           {currentUser ? (
             <>
-              <a
-                href={`/${currentUser.role}-dashboard`}
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <CustomButton
-                  title={`${currentUser.role === "admin"
-                    ? "Admin Dashboard"
-                    : "User Dashboard"
-                    }`}
-                  variant="outline"
-                  icon={<FiUser className="w-4 h-4" />}
-                  iconPosition="left"
-                  fitWidth={true}
-                  className="text-nowrap"
-                />
-              </a>
               <CustomButton
                 title="Logout"
                 variant="outline"
@@ -347,22 +334,6 @@ function NavComponent() {
           <div className="mt-auto p-4 space-y-2">
             {currentUser ? (
               <>
-                <a
-                  href={`/${currentUser.role}-dashboard`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <CustomButton
-                    title={`${currentUser.role === "admin"
-                      ? "Admin Dashboard"
-                      : "User Dashboard"
-                      }`}
-                    variant="outline"
-                    icon={<FiUser className="w-4 h-4" />}
-                    iconPosition="left"
-                    fitWidth={true}
-                    className="w-full text-left"
-                  />
-                </a>
                 <CustomButton
                   title="Logout"
                   variant="outline"
