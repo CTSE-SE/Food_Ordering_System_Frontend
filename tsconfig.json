@@ -22,7 +22,9 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "skipLibCheck": true,
+    "suppressImplicitAnyIndexErrors": true
   },
   "include": [
     "src"

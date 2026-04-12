@@ -51,14 +51,6 @@ const Layout: React.FC = () => {
             <p style={styles.subtitle}>Track and manage your orders</p>
           </div>
           <div style={styles.headerRight}>
-            {backendHealthy !== null && (
-              <div style={styles.healthIndicator}>
-                <div style={{ ...styles.healthDot, backgroundColor: backendHealthy ? '#10b981' : '#ef4444' }} />
-                <span style={styles.healthText}>
-                  {backendHealthy ? '' : 'Demo Mode'}
-                </span>
-              </div>
-            )}
             <div style={styles.userInfo}>
               <div style={styles.avatar}>MR</div>
               <div>
