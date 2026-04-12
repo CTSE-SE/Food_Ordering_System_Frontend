@@ -98,7 +98,7 @@ function SignIn() {
               navigate("/");
               window.location.reload();
               break;
-            case "resturent owner":
+            case "restaurant owner":
               navigate("/restaurant-dashboard");
               window.location.reload();
               break;
