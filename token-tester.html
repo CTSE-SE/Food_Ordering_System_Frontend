@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Token Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #111827;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .steps {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .steps h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        .steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 5px 0;
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Backend API Token Tester</h1>
+        <p class="subtitle">Test your authentication token before using it in the app</p>
+
+        <div class="steps">
+            <h3>📋 How to Use:</h3>
+            <ol>
+                <li>Get your JWT token from your authentication service</li>
+                <li>Paste it in the input below</li>
+                <li>Click "Test Token"</li>
+                <li>If successful, use the same token in your app</li>
+            </ol>
+        </div>
+
+        <div class="input-group">
+            <label for="token">Authentication Token (JWT):</label>
+            <textarea 
+                id="token" 
+                placeholder="Paste your JWT token here..."
+            ></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="userId">User ID (optional):</label>
+            <input 
+                type="text" 
+                id="userId" 
+                value="user-123" 
+                placeholder="user-123"
+            >
+        </div>
+
+        <button onclick="testToken()">🧪 Test Token</button>
+        <button onclick="testHealth()" style="background: #10b981; margin-top: 10px;">❤️ Test Health Endpoint</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://shopapp-alb-1013507396.ap-southeast-1.elb.amazonaws.com/api/orders';
+
+        async function testToken() {
+            const token = document.getElementById('token').value.trim();
+            const userId = document.getElementById('userId').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Please enter a token';
+                return;
+            }
+
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '⏳ Testing token...';
+
+            try {
+                const response = await fetch(`${API_BASE}/user/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Token is valid!
+
+Status: ${response.status}
+Orders found: ${data.data?.length || 0}
+
+Response:
+${JSON.stringify(data, null, 2)}
+
+🎉 You can use this token in your app!`;
+                    
+                    // Auto-set in localStorage for the main app
+                    localStorage.setItem('authToken', token);
+                    localStorage.setItem('userId', userId);
+                    resultDiv.textContent += '\n\n✅ Token saved to localStorage! You can now open your app.';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Token test failed
+
+Status: ${response.status}
+Error: ${data.error}
+
+Response:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Request failed
+
+Error: ${error.message}
+
+Make sure:
+1. Your backend is running
+2. The API URL is correct
+3. CORS is enabled`;
+            }
+        }
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '⏳ Checking health...';
+
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Backend is healthy!
+
+Status: ${data.status}
+Service: ${data.service}
+Timestamp: ${data.timestamp}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Health check failed\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Cannot reach backend
+
+Error: ${error.message}
+
+Backend URL: ${API_BASE}`;
+            }
+        }
+    </script>
+</body>
+</html>
