@@ -12,8 +12,20 @@ const mockAddress: ShippingAddress = {
   country: 'Sri Lanka',
 };
 
-// Mutable mock orders store
-export let mockOrders: Order[] = [
+// Initialize mock orders from localStorage or use default data
+const getInitialOrders = (): Order[] => {
+  const stored = localStorage.getItem('mockOrders');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('Failed to parse stored orders:', e);
+    }
+  }
+  return defaultMockOrders;
+};
+
+const defaultMockOrders: Order[] = [
   {
     orderId: 'ORD-20260412-001',
     orderDate: '2026-04-12T10:30:00Z',
@@ -167,11 +179,22 @@ export let mockOrders: Order[] = [
   },
 ];
 
+// Export mutable mock orders (initialized from localStorage or defaults)
+export let mockOrders: Order[] = getInitialOrders();
+
+/**
+ * Save current mock orders to localStorage
+ */
+const saveOrdersToStorage = (orders: Order[]): void => {
+  localStorage.setItem('mockOrders', JSON.stringify(orders));
+};
+
 /**
  * Add a new order to the mock store
  */
 export const addMockOrder = (order: Order): void => {
   mockOrders.unshift(order); // Add to beginning of array
+  saveOrdersToStorage(mockOrders); // Persist to localStorage
   console.log('✅ New order added to mock store:', order.orderId);
 };
 
@@ -182,6 +205,7 @@ export const updateMockOrder = (orderId: string, updates: Partial<Order>): void 
   const index = mockOrders.findIndex(o => o.orderId === orderId);
   if (index !== -1) {
     mockOrders[index] = { ...mockOrders[index], ...updates };
+    saveOrdersToStorage(mockOrders); // Persist to localStorage
     console.log('✅ Order updated in mock store:', orderId);
   }
 };
