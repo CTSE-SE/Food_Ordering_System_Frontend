@@ -1,7 +1,8 @@
 // pages/OrderDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { orderService, Order } from '../services/orderService';
+import { Order } from '../api/order.api';
+import { fetchOrderById, updateOrder, cancelOrderAPI } from '../services/orderService';
 import toast from 'react-hot-toast';
 
 interface OrderItem {
@@ -26,10 +27,10 @@ const OrderDetails: React.FC = () => {
       if (!orderId) return;
 
       try {
-        const response = await orderService.getOrderById(orderId);
+        const response = await fetchOrderById(orderId);
         
-        if (response.success && response.data) {
-          setOrder(response.data);
+        if (response) {
+          setOrder(response);
         } else {
           toast.error('Failed to fetch order details');
           navigate('/orders');
@@ -67,14 +68,12 @@ const OrderDetails: React.FC = () => {
     
     setCancelling(true);
     try {
-      const response = await orderService.cancelOrder(order.orderId);
+      const response = await cancelOrderAPI(order.orderId, 'Customer requested cancellation');
       
-      if (response.success && response.data) {
+      if (response) {
         toast.success('Order cancelled successfully');
-        setOrder(response.data);
+        setOrder(response);
         setShowCancelModal(false);
-      } else {
-        toast.error(response.error || 'Failed to cancel order');
       }
     } catch (error: any) {
       console.error('Error cancelling order:', error);
@@ -113,7 +112,7 @@ const OrderDetails: React.FC = () => {
       <div style={styles.header}>
         <div>
           <h2 style={styles.orderIdTitle}>Order #{order.orderId}</h2>
-          <p style={styles.orderDate}>Placed on {new Date(order.createdAt || '').toLocaleString()}</p>
+          <p style={styles.orderDate}>Placed on {new Date(order.orderDate).toLocaleString()}</p>
         </div>
         {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
           <button onClick={() => setShowCancelModal(true)} style={styles.cancelButton}>
@@ -177,11 +176,11 @@ const OrderDetails: React.FC = () => {
         <h3 style={styles.cardTitle}>Order Information</h3>
         <div style={styles.infoRow}>
           <span style={styles.infoLabel}>User Email:</span>
-          <span style={styles.infoValue}>{order.userEmail || 'N/A'}</span>
+          <span style={styles.infoValue}>{order.orderId || 'N/A'}</span>
         </div>
         <div style={styles.infoRow}>
           <span style={styles.infoLabel}>Last Updated:</span>
-          <span style={styles.infoValue}>{new Date(order.updatedAt || '').toLocaleString()}</span>
+          <span style={styles.infoValue}>{new Date(order.orderDate).toLocaleString()}</span>
         </div>
       </div>
 

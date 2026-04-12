@@ -1,7 +1,8 @@
 // pages/OrdersList.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { orderService, Order } from '../services/orderService';
+import { Order } from '../api/order.api';
+import { fetchOrders, updateOrder, cancelOrderAPI } from '../services/orderService';
 import toast from 'react-hot-toast';
 
 const OrdersList: React.FC = () => {
@@ -13,14 +14,13 @@ const OrdersList: React.FC = () => {
 
   // Fetch orders from backend
   useEffect(() => {
-    const fetchOrders = async () => {
+    const loadOrders = async () => {
       setLoading(true);
       try {
         // TODO: Replace with actual user ID from auth context
-        const userId = localStorage.getItem('userId') || 'user-123';
-        const response = await orderService.getUserOrders(userId);
+        const response = await fetchOrders(0, 100);
         
-        if (response.success && response.data) {
+        if (response.data) {
           setOrders(response.data);
         } else {
           toast.error('Failed to fetch orders');
@@ -34,7 +34,7 @@ const OrdersList: React.FC = () => {
       }
     };
 
-    fetchOrders();
+    loadOrders();
   }, [refreshTrigger]); // Re-run when refreshTrigger changes
 
   // Auto-refresh every 5 seconds to catch new orders
@@ -164,7 +164,7 @@ const OrdersList: React.FC = () => {
                 <td style={styles.tableCell}>
                   <span style={styles.orderId}>{order.orderId}</span>
                 </td>
-                <td style={styles.tableCell}>{formatDate(order.createdAt || '')}</td>
+                <td style={styles.tableCell}>{formatDate(order.orderDate)}</td>
                 <td style={styles.tableCell}>{order.items.length} items</td>
                 <td style={styles.tableCell}>LKR {order.totalAmount.toFixed(2)}</td>
                 <td style={styles.tableCell}>

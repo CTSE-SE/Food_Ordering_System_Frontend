@@ -1,7 +1,8 @@
 // pages/Dashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { orderService, Order } from '../services/orderService';
+import { Order } from '../api/order.api';
+import { fetchOrders, getStatusCounts } from '../services/orderService';
 import toast from 'react-hot-toast';
 
 interface OrderStats {
@@ -30,10 +31,9 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       try {
         // TODO: Replace with actual user ID from auth context
-        const userId = localStorage.getItem('userId') || 'user-123';
-        const response = await orderService.getUserOrders(userId);
+        const response = await fetchOrders(0, 100);
         
-        if (response.success && response.data) {
+        if (response.data) {
           const orders = response.data;
           
           // Calculate stats
@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
           
           // Get recent orders (last 4)
           const sortedOrders = orders.sort((a, b) => 
-            new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
+            new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
           );
           setRecentOrders(sortedOrders.slice(0, 4));
         }
@@ -156,7 +156,7 @@ const Dashboard: React.FC = () => {
                       {order.orderId}
                     </Link>
                   </td>
-                  <td style={styles.tableCell}>{formatDate(order.createdAt || '')}</td>
+                  <td style={styles.tableCell}>{formatDate(order.orderDate)}</td>
                   <td style={styles.tableCell}>LKR {order.totalAmount.toFixed(2)}</td>
                   <td style={styles.tableCell}>
                     <span style={{ ...styles.statusBadge, backgroundColor: getStatusColor(order.status) + '20', color: getStatusColor(order.status) }}>

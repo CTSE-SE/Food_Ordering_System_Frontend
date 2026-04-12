@@ -1,7 +1,8 @@
 // pages/CreateOrder.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { orderService, ShippingAddress } from '../services/orderService';
+import { ShippingAddress } from '../api/order.api';
+import { createOrder } from '../services/orderService';
 import toast from 'react-hot-toast';
 
 interface CartItem {
@@ -17,6 +18,7 @@ const CreateOrder: React.FC = () => {
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     street: '',
     city: '',
+    state: '',
     postalCode: '',
     country: '',
   });
@@ -68,20 +70,19 @@ const CreateOrder: React.FC = () => {
     try {
       const orderData = {
         items: cartItems.map(item => ({
+          menuId: '',
           productId: item.productId,
+          name: item.name,
+          price: item.price,
           quantity: item.quantity,
         })),
         shippingAddress,
       };
 
-      const response = await orderService.createOrder(orderData);
+      const response = await createOrder(orderData);
       
-      if (response.success) {
-        toast.success('Order created successfully!');
-        navigate('/orders');
-      } else {
-        toast.error(response.error || 'Failed to create order');
-      }
+      toast.success('Order created successfully!');
+      navigate('/orders');
     } catch (error: any) {
       console.error('Error creating order:', error);
       const errorMessage = error.response?.data?.error || 'Failed to create order. Please try again.';
