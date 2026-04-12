@@ -1,29 +1,9 @@
 // components/Layout.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { orderService } from '../services/orderService';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
-
-  // Check backend health on mount
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const response = await orderService.checkHealth();
-        setBackendHealthy(response.status === 'healthy');
-      } catch (error) {
-        console.error('Backend health check failed:', error);
-        setBackendHealthy(false);
-      }
-    };
-
-    checkHealth();
-    // Check health every 30 seconds
-    const interval = setInterval(checkHealth, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
