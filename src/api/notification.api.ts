@@ -1,5 +1,7 @@
 // import customFetch from "../utils/customFetch";
 
+export {};
+
 // export interface Notification {
 //     id: string;
 //     userId: string;

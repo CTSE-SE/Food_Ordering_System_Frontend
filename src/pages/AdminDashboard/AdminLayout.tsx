@@ -4,7 +4,7 @@ import {
   FiPieChart,
   FiUser,
 } from "react-icons/fi";
-import NavBar from "@/components/UI/NavBar";
+import NavBar from "../components/UI/NavBar";
 
 const menuItems = [
   { path: "overview", title: "Overview", icon: <FiPieChart /> },

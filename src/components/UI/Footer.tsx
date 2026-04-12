@@ -4,7 +4,7 @@ import {
   FaInstagram,
   FaLinkedinIn,
 } from "react-icons/fa";
-import logo from "/Images/NavBar/logo.webp?url";
+import logo from "../../public/Images/NavBar/logo.webp?url";
 
 function Footer() {
   return (

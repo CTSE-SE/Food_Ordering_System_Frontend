@@ -1,4 +1,4 @@
-import hero from "/Images/Home/hero.webp";
+import hero from "../../public/Images/Home/hero.webp";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import customFetch from "@/utils/customFetch";
+import customFetch from "../utils/customFetch";
 import { BounceLoader } from "react-spinners";
 
 interface UserProfile {

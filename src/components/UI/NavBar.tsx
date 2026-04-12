@@ -2,12 +2,12 @@
 import { useState, useRef, useEffect } from "react";
 import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdMenu, MdClose } from "react-icons/md";
 import { FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
-import logo from "/Images/NavBar/logo.webp?url";
-import ContactInfo from "@/components/UI/ContactInfo";
-import CustomButton from "@/components/UI/Button";
+import logo from "../../public/Images/NavBar/logo.webp?url";
+import ContactInfo from "../components/UI/ContactInfo";
+import CustomButton from "../components/UI/Button";
 
 import { toast } from "react-hot-toast";
-import Modal from "@/components/UI/Modal";
+import Modal from "../components/UI/Modal";
 
 // Define NavItems type and data
 interface NavItem {

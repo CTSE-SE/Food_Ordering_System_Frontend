@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import customFetch from "@/utils/customFetch";
+import customFetch from "../utils/customFetch";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import customFetch from "@/utils/customFetch";
-import Table from "@/components/Table/Table";
-import Modal from "@/components/UI/Modal";
+import customFetch from "../utils/customFetch";
+import Table from "../components/Table/Table";
+import Modal from "../components/UI/Modal";
 import axios from "axios";
 import { BounceLoader } from "react-spinners";
-import { generatePDF } from "@/utils/pdfGenerator";
+import { generatePDF } from "../utils/pdfGenerator";
 
 interface Staff {
   _id: string;

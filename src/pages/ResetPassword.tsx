@@ -1,12 +1,12 @@
-import hero from "/Images/Home/hero.webp";
-import logo from "/Images/NavBar/logo.webp?url";
+import hero from "../../public/Images/Home/hero.webp";
+import logo from "../../public/Images/NavBar/logo.webp?url";
 import { useState } from "react";
-import CustomButton from "@/components/UI/Button";
+import CustomButton from "../components/UI/Button";
 import { IoEyeOutline } from "react-icons/io5";
 import { IoEyeOffOutline } from "react-icons/io5";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import customFetch from "@/utils/customFetch";
+import customFetch from "../utils/customFetch";
 import axios from "axios";
 
 const ResetPassword = () => {
