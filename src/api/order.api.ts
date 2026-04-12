@@ -1,160 +1,134 @@
-import customFetch from "../utils/customFetch";
-import { Menu } from "./restaurant.api";
+// Order API - Clean version without restaurant integration
+import axios, { AxiosError } from 'axios';
 
-export interface OrderItem {
-    id: string;
-    menuId: string;
-    name: string;
-    quantity: number;
-    price: number;
-    totalPrice: number;
-}
+const API_BASE_URL = 'http://shopapp-alb-1013507396.ap-southeast-1.elb.amazonaws.com/api/orders';
 
 export interface ShippingAddress {
     street: string;
     city: string;
+    state: string;
     postalCode: string;
     country: string;
 }
 
-export interface Order {
-    id: string;
-    orderId: string;
-    userId: string;
-    userEmail: string;
-    restaurantId?: string;
-    restaurantName?: string;
+export interface OrderItem {
+    menuId: string;
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+}
+
+export interface CreateOrderRequest {
     items: OrderItem[];
-    totalAmount: number;
-    status: "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-    paymentStatus: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
     shippingAddress: ShippingAddress;
-    createdAt: string;
-    updatedAt: string;
+    token?: string;
+}
+
+export interface UpdateOrderStatusRequest {
+    status: string;
+    reason?: string;
+}
+
+export interface Order {
+    orderId: string;
+    orderDate: string;
+    items: OrderItem[];
+    status: string;
+    shippingAddress: ShippingAddress;
+    totalAmount: number;
+    paymentStatus: string;
 }
 
 export interface OrderApiResponse<T> {
     success: boolean;
-    message?: string;
-    data?: T;
-    error?: string;
+    message: string;
+    data: T;
 }
 
-export interface CreateOrderRequest {
-    items: {
-        menuId: string;
-        productId: string;
-        name: string;
-        quantity: number;
-        price: number;
-    }[];
-    restaurantId?: string;
-    shippingAddress: ShippingAddress;
+export interface PaginatedResponse<T> {
+    data: T[];
+    total: number;
+    page: number;
+    size: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
 }
 
-// Create a new order
-export const createOrder = async (data: CreateOrderRequest, token?: string): Promise<OrderApiResponse<Order>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    
-    // Transform the request to match backend API format
-    const orderData = {
-        items: data.items.map(item => ({
-            productId: item.productId || item.menuId,
-            quantity: item.quantity,
-            name: item.name,
-            price: item.price,
-        })),
-        restaurantId: data.restaurantId,
-        shippingAddress: data.shippingAddress,
-    };
-    
-    const response = await customFetch.post("/orders", orderData, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
+export const getOrders = async (
+    page: number = 0,
+    size: number = 10,
+    status?: string,
+    token?: string
+): Promise<PaginatedResponse<Order>> => {
+    try {
+        const params: any = { page, size };
+        if (status && status !== 'All') params.status = status;
+
+        const response = await axios.get(`${API_BASE_URL}/all`, { params });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
 };
 
-// Get user's orders
-export const getUserOrders = async (userId?: string, token?: string): Promise<OrderApiResponse<Order[]>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    const uid = userId || localStorage.getItem("userId") || "user-123";
-    
-    const response = await customFetch.get(`/orders/user/${uid}`, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
+export const getOrderById = async (orderId: string): Promise<OrderApiResponse<Order>> => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/${orderId}`);
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
 };
 
-// Get order by ID
-export const getOrderById = async (id: string, token?: string): Promise<OrderApiResponse<Order>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    
-    const response = await customFetch.get(`/orders/${id}`, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
+export const createOrder = async (
+    orderData: CreateOrderRequest
+): Promise<OrderApiResponse<Order>> => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/place-order`, orderData);
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
 };
 
-// Cancel an order
-export const cancelOrder = async (id: string, token?: string): Promise<OrderApiResponse<Order>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    
-    const response = await customFetch.delete(`/orders/${id}`, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
-};
-
-// Update order status
-export const updateOrderStatus = async (id: string, status: string, token?: string): Promise<OrderApiResponse<Order>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    
-    const response = await customFetch.put(`/orders/${id}/status`, { status }, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
-};
-
-// Get orders by restaurant ID
-export const getRestaurantOrders = async (restaurantId: string, token?: string): Promise<OrderApiResponse<Order[]>> => {
-    const authToken = token || localStorage.getItem("token") || localStorage.getItem("authToken");
-    
-    const response = await customFetch.get(`/orders/restaurant/${restaurantId}`, {
-        headers: authToken ? {
-            Authorization: `Bearer ${authToken}`
-        } : {}
-    });
-    return response.data;
-};
-
-// Create order from menu items
-export const createOrderFromMenu = async (
-    menuItems: { menu: Menu; quantity: number }[],
-    restaurantId: string,
-    shippingAddress: ShippingAddress,
+export const updateOrderStatus = async (
+    orderId: string,
+    statusData: UpdateOrderStatusRequest,
     token?: string
 ): Promise<OrderApiResponse<Order>> => {
-    const orderData: CreateOrderRequest = {
-        items: menuItems.map(({ menu, quantity }) => ({
-            menuId: menu.id,
-            productId: menu.id,
-            name: menu.name,
-            quantity,
-            price: menu.price,
-        })),
-        restaurantId,
-        shippingAddress,
-    };
-    
-    return await createOrder(orderData, token);
+    try {
+        const response = await axios.put(`${API_BASE_URL}/${orderId}/status`, statusData);
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+export const cancelOrder = async (
+    orderId: string,
+    reason: string,
+    token?: string
+): Promise<OrderApiResponse<Order>> => {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/${orderId}/cancel`, { reason });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+export const getUserOrders = async (
+    page: number = 0,
+    size: number = 10
+): Promise<PaginatedResponse<Order>> => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/my-orders`, {
+            params: { page, size },
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
 };
