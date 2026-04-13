@@ -10,6 +10,10 @@ import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import UserLayout from "./pages/UserDashboard/UserLayout";
 import Profile from "./pages/UserDashboard/Profile";
 import Users from "./pages/AdminDashboard/pages/Users";
+import ResturentLayout from "./pages/ResturentDashboard/ResturentLayout";
+import Category from "./pages/ResturentDashboard/pages/Category";
+import Menu from "./pages/ResturentDashboard/pages/Menu";
+import ResturentOverview from "./pages/ResturentDashboard/pages/Overview";
 
 import Staff from "./pages/AdminDashboard/pages/Staff";
 import Overview from "./pages/AdminDashboard/pages/Overview";
@@ -23,6 +27,19 @@ const AdminRoutes = () => {
         <Route path="overview" element={<Overview />} />
         <Route path="users" element={<Users />} />
         <Route path="staff" element={<Staff />} />
+      </Route>
+    </Routes>
+  );
+};
+
+const ResturentRoutes = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<ResturentLayout />}>
+        <Route index element={<Navigate to="overview" replace />} />
+        <Route path="overview" element={<ResturentOverview />} />
+        <Route path="category" element={<Category />} />
+        <Route path="menu" element={<Menu />} />
       </Route>
     </Routes>
   );
@@ -47,6 +64,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/menu" element={<Home />} /> {/* Temporary redirect or new page */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/restaurant-signup" element={<RestaurantSignUp />} />
@@ -55,6 +73,7 @@ function App() {
         </Route>
         <Route path="/admin-dashboard/*" element={<AdminRoutes />} />
         <Route path="/user-dashboard/*" element={<UserRoutes />} />
+        <Route path="/restaurant-dashboard/*" element={<ResturentRoutes />} />
       </Routes>
     </BrowserRouter>
   );
