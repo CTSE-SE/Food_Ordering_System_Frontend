@@ -24,21 +24,24 @@ const MenuSection = () => {
           console.log("Found restaurants:", restaurants.length);
 
           // Fetch menus for all restaurants in parallel
-          const menuPromises = restaurants.map(async (rest) => {
-            const menuRes = await getMenuItemsByRestaurantId(rest.id);
-            if (menuRes.success) {
-              return menuRes.data.map(item => ({
-                ...item,
-                restaurantName: rest.restaurantName
-              }));
-            }
-            return [];
-          });
+          const menuResults = await Promise.allSettled(
+            restaurants.map(async (rest) => {
+              const menuRes = await getMenuItemsByRestaurantId(rest.id);
+              if (menuRes.success) {
+                return menuRes.data.map(item => ({
+                  ...item,
+                  restaurantName: rest.restaurantName
+                }));
+              }
+              return [];
+            })
+          );
 
-          const allMenusNested = await Promise.all(menuPromises);
-          const allMenusFlattened = allMenusNested.flat();
+          const allMenusFlattened = menuResults
+            .filter((result): result is PromiseFulfilledResult<MenuItemWithRestaurant[]> => result.status === 'fulfilled')
+            .map(result => result.value)
+            .flat();
 
-          // Shuffle or sort if needed, here we just take the first few or all
           console.log("All menu items aggregated:", allMenusFlattened.length);
           setMenuItems(allMenusFlattened);
         }

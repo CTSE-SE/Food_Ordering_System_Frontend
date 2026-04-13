@@ -64,6 +64,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/menu" element={<Home />} /> {/* Temporary redirect or new page */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/restaurant-signup" element={<RestaurantSignUp />} />
