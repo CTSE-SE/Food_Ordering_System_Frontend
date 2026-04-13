@@ -2,11 +2,13 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import {
   FiUser,
   FiBookmark,
+  FiShoppingBag,
 } from "react-icons/fi";
 import NavBar from "@/components/UI/NavBar";
 
 const menuItems = [
   { path: "profile", title: "My Profile", icon: <FiUser /> },
+  { path: "orders", title: "My Orders", icon: <FiShoppingBag /> },
   { path: "bookings", title: "My Bookings", icon: <FiBookmark /> },
 ];
 

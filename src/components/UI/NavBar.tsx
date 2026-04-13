@@ -1,10 +1,13 @@
 
 import { useState, useRef, useEffect } from "react";
-import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdMenu, MdClose } from "react-icons/md";
+import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdMenu, MdClose, MdShoppingCart } from "react-icons/md";
 import { FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
 import logo from "/Images/NavBar/logo.webp?url";
 import ContactInfo from "@/components/UI/ContactInfo";
 import CustomButton from "@/components/UI/Button";
+import Cart from "@/components/UI/Cart";
+import { useCart } from "@/context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-hot-toast";
 import Modal from "@/components/UI/Modal";
@@ -44,9 +47,12 @@ function NavComponent() {
   const [activeSubItem, setActiveSubItem] = useState("");
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { getTotalItems } = useCart();
+  const navigate = useNavigate();
 
 
   // Handle scroll for navbar shadow
@@ -227,6 +233,19 @@ function NavComponent() {
 
         {/* Auth Buttons (Visible on xl and above) */}
         <div className="hidden xl:flex items-center gap-x-4">
+          {/* Cart Icon */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 text-event-charcoal hover:text-event-blue transition-colors"
+          >
+            <MdShoppingCart size={24} />
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-1 -right-1 bg-event-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {getTotalItems()}
+              </span>
+            )}
+          </button>
+
           {currentUser ? (
             <>
               <CustomButton
@@ -278,6 +297,25 @@ function NavComponent() {
               className="text-event-charcoal"
               onClick={() => setIsSidebarOpen(false)}
             >
+            </button>
+          </div>
+
+          {/* Cart Icon in Sidebar */}
+          <div className="p-4 border-b border-event-charcoal">
+            <button
+              onClick={() => {
+                setIsCartOpen(true);
+                setIsSidebarOpen(false);
+              }}
+              className="relative flex items-center gap-3 w-full p-3 text-event-charcoal hover:text-event-blue hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <MdShoppingCart size={24} />
+              <span className="font-medium">Shopping Cart</span>
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 left-8 bg-event-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {getTotalItems()}
+                </span>
+              )}
             </button>
           </div>
 
@@ -402,6 +440,17 @@ function NavComponent() {
           </div>
         </div>
       </Modal>
+
+      {/* Cart Modal */}
+      {isCartOpen && (
+        <Cart
+          onClose={() => setIsCartOpen(false)}
+          onCheckout={() => {
+            setIsCartOpen(false);
+            navigate("/checkout");
+          }}
+        />
+      )}
     </div>
   );
 }

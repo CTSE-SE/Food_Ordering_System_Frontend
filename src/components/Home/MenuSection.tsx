@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { getAllRestaurants, getMenuItemsByRestaurantId, Menu } from "@/api/restaurant.api";
+import { useCart } from "@/context/CartContext";
+import { toast } from "react-hot-toast";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
@@ -13,6 +15,19 @@ interface MenuItemWithRestaurant extends Menu {
 const MenuSection = () => {
   const [menuItems, setMenuItems] = useState<MenuItemWithRestaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (item: MenuItemWithRestaurant) => {
+    addToCart({
+      productId: `prod-${item.id}`,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      image: item.mainImage,
+      restaurantName: item.restaurantName,
+    });
+    toast.success(`${item.name} added to cart!`);
+  };
 
   useEffect(() => {
     const fetchAllMenus = async () => {
@@ -135,8 +150,11 @@ const MenuSection = () => {
                     <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-1">
                       {item.description}
                     </p>
-                    <button className="w-full py-2 bg-event-navy text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors">
-                      Add to Card
+                    <button 
+                      onClick={() => handleAddToCart(item)}
+                      className="w-full py-2 bg-event-navy text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
+                    >
+                      Add to Cart
                     </button>
                   </div>
                 </div>
