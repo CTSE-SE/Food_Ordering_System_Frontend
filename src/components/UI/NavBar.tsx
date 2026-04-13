@@ -173,55 +173,57 @@ function NavComponent() {
         </button>
 
         {/* Navbar Links (Visible on xl and above) */}
-        <ul className="hidden xl:flex items-center space-x-6 text-nowrap">
-          {NavItems.map((item) => (
-            <li key={item.title} className="relative">
-              <div
-                className="flex items-center space-x-2 cursor-pointer"
-                onClick={(e) => handleItemClick(item, e)}
-              >
-                <a
-                  href={item.subItems.length === 0 ? item.path : "#"}
-                  className={`text-event-charcoal hover:text-event-blue ${!currentUser && !activeItem && item.title === "Home"
-                    ? "font-bold"
-                    : ""
-                    } ${isActive(item.path) || activeItem === item.title
+        {currentUser?.role !== "resturent owner" && (
+          <ul className="hidden xl:flex items-center space-x-6 text-nowrap">
+            {NavItems.map((item) => (
+              <li key={item.title} className="relative">
+                <div
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={(e) => handleItemClick(item, e)}
+                >
+                  <a
+                    href={item.subItems.length === 0 ? item.path : "#"}
+                    className={`text-event-charcoal hover:text-event-blue ${!currentUser && !activeItem && item.title === "Home"
                       ? "font-bold"
                       : ""
-                    }`}
-                >
-                  {item.title}
-                </a>
-                {item.subItems.length > 0 && (
-                  <button>
-                    {openDropdown === item.title ? (
-                      <MdKeyboardArrowUp size={18} />
-                    ) : (
-                      <MdKeyboardArrowDown size={18} />
-                    )}
-                  </button>
-                )}
-              </div>
-              {openDropdown === item.title && item.subItems.length > 0 && (
-                <div className="absolute z-10 w-48 py-2 mt-2 bg-event-white rounded-md shadow-lg">
-                  {item.subItems.map((subItem) => (
-                    <a
-                      key={subItem.title}
-                      href={subItem.path}
-                      className={`block px-4 py-2 text-sm hover:bg-event-navy hover:text-white ${activeSubItem === subItem.title
-                        ? "bg-event-navy text-white"
-                        : "text-event-charcoal"
-                        }`}
-                      onClick={() => handleSubItemClick(subItem, item)}
-                    >
-                      {subItem.title}
-                    </a>
-                  ))}
+                      } ${isActive(item.path) || activeItem === item.title
+                        ? "font-bold"
+                        : ""
+                      }`}
+                  >
+                    {item.title}
+                  </a>
+                  {item.subItems.length > 0 && (
+                    <button>
+                      {openDropdown === item.title ? (
+                        <MdKeyboardArrowUp size={18} />
+                      ) : (
+                        <MdKeyboardArrowDown size={18} />
+                      )}
+                    </button>
+                  )}
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
+                {openDropdown === item.title && item.subItems.length > 0 && (
+                  <div className="absolute z-10 w-48 py-2 mt-2 bg-event-white rounded-md shadow-lg">
+                    {item.subItems.map((subItem) => (
+                      <a
+                        key={subItem.title}
+                        href={subItem.path}
+                        className={`block px-4 py-2 text-sm hover:bg-event-navy hover:text-white ${activeSubItem === subItem.title
+                          ? "bg-event-navy text-white"
+                          : "text-event-charcoal"
+                          }`}
+                        onClick={() => handleSubItemClick(subItem, item)}
+                      >
+                        {subItem.title}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Auth Buttons (Visible on xl and above) */}
         <div className="hidden xl:flex items-center gap-x-4">
@@ -280,55 +282,57 @@ function NavComponent() {
           </div>
 
           {/* Sidebar Nav Items */}
-          <ul className="flex flex-col p-4 space-y-2">
-            {NavItems.map((item) => (
-              <li key={item.title} className="relative">
-                <div
-                  className="flex items-center justify-between cursor-pointer"
-                  onClick={(e) => handleItemClick(item, e)}
-                >
-                  <a
-                    href={item.subItems.length === 0 ? item.path : "#"}
-                    className={`text-event-charcoal hover:text-event-blue ${!currentUser && !activeItem && item.title === "Home"
-                      ? "font-bold"
-                      : ""
-                      } ${isActive(item.path) || activeItem === item.title
+          {currentUser?.role !== "resturent owner" && (
+            <ul className="flex flex-col p-4 space-y-2">
+              {NavItems.map((item) => (
+                <li key={item.title} className="relative">
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={(e) => handleItemClick(item, e)}
+                  >
+                    <a
+                      href={item.subItems.length === 0 ? item.path : "#"}
+                      className={`text-event-charcoal hover:text-event-blue ${!currentUser && !activeItem && item.title === "Home"
                         ? "font-bold"
                         : ""
-                      }`}
-                  >
-                    {item.title}
-                  </a>
-                  {item.subItems.length > 0 && (
-                    <button>
-                      {openDropdown === item.title ? (
-                        <MdKeyboardArrowUp size={18} />
-                      ) : (
-                        <MdKeyboardArrowDown size={18} />
-                      )}
-                    </button>
-                  )}
-                </div>
-                {openDropdown === item.title && item.subItems.length > 0 && (
-                  <div className="pl-4 mt-2 space-y-2">
-                    {item.subItems.map((subItem) => (
-                      <a
-                        key={subItem.title}
-                        href={subItem.path}
-                        className={`block px-4 py-2 text-sm hover:bg-event-navy hover:text-white ${activeSubItem === subItem.title
-                          ? "bg-event-navy text-white"
-                          : "text-event-charcoal"
-                          }`}
-                        onClick={() => handleSubItemClick(subItem, item)}
-                      >
-                        {subItem.title}
-                      </a>
-                    ))}
+                        } ${isActive(item.path) || activeItem === item.title
+                          ? "font-bold"
+                          : ""
+                        }`}
+                    >
+                      {item.title}
+                    </a>
+                    {item.subItems.length > 0 && (
+                      <button>
+                        {openDropdown === item.title ? (
+                          <MdKeyboardArrowUp size={18} />
+                        ) : (
+                          <MdKeyboardArrowDown size={18} />
+                        )}
+                      </button>
+                    )}
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
+                  {openDropdown === item.title && item.subItems.length > 0 && (
+                    <div className="pl-4 mt-2 space-y-2">
+                      {item.subItems.map((subItem) => (
+                        <a
+                          key={subItem.title}
+                          href={subItem.path}
+                          className={`block px-4 py-2 text-sm hover:bg-event-navy hover:text-white ${activeSubItem === subItem.title
+                            ? "bg-event-navy text-white"
+                            : "text-event-charcoal"
+                            }`}
+                          onClick={() => handleSubItemClick(subItem, item)}
+                        >
+                          {subItem.title}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Sidebar Auth Buttons */}
           <div className="mt-auto p-4 space-y-2">

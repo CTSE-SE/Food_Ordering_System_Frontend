@@ -98,8 +98,8 @@ function SignIn() {
               navigate("/");
               window.location.reload();
               break;
-            case "resturentowner":
-              navigate("/resturent");
+            case "restaurant owner":
+              navigate("/restaurant-dashboard");
               window.location.reload();
               break;
             default:

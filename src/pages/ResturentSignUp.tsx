@@ -163,7 +163,7 @@ const SignUp = () => {
         password: formData.password,
         phone: formData.phoneNumber,
         address: `${formData.streetAddress}, ${formData.city}, ${formData.state}, ${formData.country}`,
-        role: "resturentowner"
+        role: "resturent owner"
       });
 
       let token = authResponse?.token;
@@ -188,7 +188,7 @@ const SignUp = () => {
 
         // 2. Create Restaurant with the token
         const restaurantData = {
-          restaurantName: formData.restaurantName,
+          name: formData.restaurantName,
           contactPerson: formData.contactPerson,
           phoneNumber: formData.phoneNumber,
           email: formData.email,
@@ -205,12 +205,12 @@ const SignUp = () => {
           agreeTerms: formData.agreeTerms
         };
 
-        const restaurantResponse = await createRestaurant(restaurantData, token);
+        const restaurantResponse = await createRestaurant(restaurantData);
 
         if (restaurantResponse) {
           toast.success("Restaurant registered successfully!");
           setTimeout(() => {
-            navigate("/resturent"); // Redirecting to restaurant dashboard
+            navigate("/restaurant-dashboard"); // Redirecting to restaurant dashboard
             window.location.reload();
           }, 1500);
         }
