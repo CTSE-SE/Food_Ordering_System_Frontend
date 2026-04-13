@@ -9,6 +9,7 @@ import RestaurantSignUp from "./pages/ResturentSignUp";
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import UserLayout from "./pages/UserDashboard/UserLayout";
 import Profile from "./pages/UserDashboard/Profile";
+import MyBookings from "./pages/UserDashboard/MyBookings";
 import Users from "./pages/AdminDashboard/pages/Users";
 import ResturentLayout from "./pages/ResturentDashboard/ResturentLayout";
 import Category from "./pages/ResturentDashboard/pages/Category";
@@ -53,6 +54,7 @@ const UserRoutes = () => {
         <Route path="profile" element={<Profile />} />
         <Route path="notifications" />
         <Route path="settings" />
+        <Route path="bookings" element={<MyBookings />} />
       </Route>
     </Routes>
   );

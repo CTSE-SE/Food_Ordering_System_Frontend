@@ -95,7 +95,7 @@ function SignIn() {
               window.location.reload();
               break;
             case "customer":
-              navigate("/");
+              navigate("/user-dashboard/profile");
               window.location.reload();
               break;
             case "restaurant owner":
