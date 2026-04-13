@@ -2,10 +2,6 @@
 
 This is the React frontend for the Order Management System, integrated with the backend API hosted on AWS.
 
-## ✅ No Authentication Required!
-
-The app now works in **Demo Mode** with mock data - no authentication token needed!
-
 ### Features:
 - 📊 Real-time dashboard with order statistics
 - 📦 Browse and filter orders
