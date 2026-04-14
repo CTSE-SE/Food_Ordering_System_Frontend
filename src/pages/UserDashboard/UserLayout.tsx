@@ -2,12 +2,14 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import {
   FiUser,
   FiBookmark,
+  FiBell,
 } from "react-icons/fi";
 import NavBar from "@/components/UI/NavBar";
 
 const menuItems = [
   { path: "profile", title: "My Profile", icon: <FiUser /> },
   { path: "bookings", title: "My Bookings", icon: <FiBookmark /> },
+  { path: "notifications", title: "Notifications", icon: <FiBell /> },
 ];
 
 const UserLayout = () => {

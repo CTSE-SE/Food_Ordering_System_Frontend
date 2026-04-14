@@ -9,6 +9,7 @@ import RestaurantSignUp from "./pages/ResturentSignUp";
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import UserLayout from "./pages/UserDashboard/UserLayout";
 import Profile from "./pages/UserDashboard/Profile";
+import Notifications from "./pages/UserDashboard/Notifications";
 import Users from "./pages/AdminDashboard/pages/Users";
 import ResturentLayout from "./pages/ResturentDashboard/ResturentLayout";
 import Category from "./pages/ResturentDashboard/pages/Category";
@@ -51,7 +52,7 @@ const UserRoutes = () => {
       <Route path="/" element={<UserLayout />}>
         <Route index element={<Navigate to="profile" replace />} />
         <Route path="profile" element={<Profile />} />
-        <Route path="notifications" />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="settings" />
       </Route>
     </Routes>

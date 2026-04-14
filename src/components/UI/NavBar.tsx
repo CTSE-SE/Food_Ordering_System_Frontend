@@ -5,6 +5,7 @@ import { FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
 import logo from "/Images/NavBar/logo.webp?url";
 import ContactInfo from "@/components/UI/ContactInfo";
 import CustomButton from "@/components/UI/Button";
+import NotificationPanel from "@/components/UI/NotificationPanel";
 
 import { toast } from "react-hot-toast";
 import Modal from "@/components/UI/Modal";
@@ -229,6 +230,7 @@ function NavComponent() {
         <div className="hidden xl:flex items-center gap-x-4">
           {currentUser ? (
             <>
+              <NotificationPanel currentUser={currentUser} />
               <CustomButton
                 title="Logout"
                 variant="outline"
@@ -338,6 +340,10 @@ function NavComponent() {
           <div className="mt-auto p-4 space-y-2">
             {currentUser ? (
               <>
+                <div className="flex items-center gap-2 pb-2">
+                  <NotificationPanel currentUser={currentUser} />
+                  <span className="text-sm text-gray-600">Notifications</span>
+                </div>
                 <CustomButton
                   title="Logout"
                   variant="outline"
