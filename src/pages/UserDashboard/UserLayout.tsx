@@ -1,17 +1,17 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import {
   FiUser,
-  FiBookmark,
   FiBell,
   FiPackage,
+  FiGrid,
 } from "react-icons/fi";
 import NavBar from "@/components/UI/NavBar";
 
 const menuItems = [
+  { path: "menu",          title: "Browse Menu",   icon: <FiGrid /> },
   { path: "profile",       title: "My Profile",    icon: <FiUser /> },
   { path: "orders",        title: "My Orders",     icon: <FiPackage /> },
   { path: "notifications", title: "Notifications", icon: <FiBell /> },
-  { path: "bookings",      title: "My Bookings",   icon: <FiBookmark /> },
 ];
 
 const UserLayout = () => {
@@ -47,15 +47,17 @@ const UserLayout = () => {
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
-          <header className="bg-white shadow-sm">
-            <div className="px-6 py-4">
-              <h2 className="text-xl font-semibold">
-                {menuItems.find((item) => item.path === currentPath)?.title}
-              </h2>
-            </div>
-          </header>
+          {currentPath !== "menu" && (
+            <header className="bg-white shadow-sm">
+              <div className="px-6 py-4">
+                <h2 className="text-xl font-semibold">
+                  {menuItems.find((item) => item.path === currentPath)?.title}
+                </h2>
+              </div>
+            </header>
+          )}
 
-          <main className="p-6">
+          <main className={currentPath === "menu" ? "" : "p-6"}>
             <Outlet />
           </main>
         </div>

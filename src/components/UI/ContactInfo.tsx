@@ -10,10 +10,10 @@ function ContactInfo() {
           <div className="flex items-center space-x-3">
             <MdMailOutline className="w-4 h-4 text-white" />
             <a
-              href="mailto:inquiries@certix.ac.lk"
+              href="mailto:support@foodapp.lk"
               className="text-xs font-medium text-white font-PlusSans cursor-pointer hover:underline"
             >
-              info@template.com
+              support@foodapp.lk
             </a>
           </div>
           <div className="text-white">|</div>
