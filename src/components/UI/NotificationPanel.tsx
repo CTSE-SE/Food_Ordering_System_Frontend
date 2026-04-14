@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { FiBell, FiTrash2, FiCheck, FiCheckCircle } from "react-icons/fi";
+import { FiBell, FiCheck, FiCheckCircle } from "react-icons/fi";
 import { MdNotificationsNone } from "react-icons/md";
 import { toast } from "react-hot-toast";
 import {
   Notification,
-  deleteAllNotifications,
-  deleteNotification,
   getUnreadCount,
   getUserNotifications,
   markAllNotificationsAsRead,
@@ -34,7 +32,6 @@ function formatTime(dateStr: string) {
 // ── component ──────────────────────────────────────────────────────────────
 
 interface Props {
-  /** When true the panel is only shown when a logged-in user exists */
   currentUser: { role: string } | null;
 }
 
@@ -53,7 +50,7 @@ export default function NotificationPanel({ currentUser }: Props) {
       const res = await getUnreadCount();
       if (res?.success) setUnreadCount(res.data?.unreadCount ?? 0);
     } catch {
-      // silently ignore – badge just won't update
+      // silently ignore
     }
   }, [currentUser]);
 
@@ -77,11 +74,20 @@ export default function NotificationPanel({ currentUser }: Props) {
     }
   }, [currentUser]);
 
-  // Poll unread count every 30 s
+  // Poll every 2 minutes — pause when tab is hidden
   useEffect(() => {
     fetchUnreadCount();
-    const id = setInterval(fetchUnreadCount, 30_000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval>;
+
+    const start = () => { id = setInterval(fetchUnreadCount, 120_000); };
+    const stop  = () => clearInterval(id);
+
+    const onVisibility = () =>
+      document.hidden ? stop() : (fetchUnreadCount(), start());
+
+    document.addEventListener("visibilitychange", onVisibility);
+    start();
+    return () => { stop(); document.removeEventListener("visibilitychange", onVisibility); };
   }, [fetchUnreadCount]);
 
   // Load full list when panel opens
@@ -92,9 +98,8 @@ export default function NotificationPanel({ currentUser }: Props) {
   // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node))
         setOpen(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -106,7 +111,7 @@ export default function NotificationPanel({ currentUser }: Props) {
     try {
       await markNotificationAsRead(id);
       setNotifications((prev) =>
-        (prev ?? []).map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch {
@@ -117,33 +122,11 @@ export default function NotificationPanel({ currentUser }: Props) {
   const handleMarkAllRead = async () => {
     try {
       await markAllNotificationsAsRead();
-      setNotifications((prev) => (prev ?? []).map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
       toast.success("All notifications marked as read");
     } catch {
       toast.error("Failed to mark all as read");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteNotification(id);
-      const deleted = (notifications ?? []).find((n) => n.id === id);
-      setNotifications((prev) => (prev ?? []).filter((n) => n.id !== id));
-      if (deleted && !deleted.isRead) setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {
-      toast.error("Failed to delete notification");
-    }
-  };
-
-  const handleClearAll = async () => {
-    try {
-      await deleteAllNotifications();
-      setNotifications([]);
-      setUnreadCount(0);
-      toast.success("All notifications cleared");
-    } catch {
-      toast.error("Failed to clear notifications");
     }
   };
 
@@ -180,28 +163,16 @@ export default function NotificationPanel({ currentUser }: Props) {
                 </span>
               )}
             </h3>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllRead}
-                  title="Mark all as read"
-                  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                >
-                  <FiCheckCircle size={13} />
-                  Mark all read
-                </button>
-              )}
-              {notifications.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  title="Clear all"
-                  className="text-xs text-red-500 hover:underline flex items-center gap-1"
-                >
-                  <FiTrash2 size={13} />
-                  Clear all
-                </button>
-              )}
-            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                title="Mark all as read"
+                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              >
+                <FiCheckCircle size={13} />
+                Mark all read
+              </button>
+            )}
           </div>
 
           {/* Body */}
@@ -225,11 +196,7 @@ export default function NotificationPanel({ currentUser }: Props) {
                 >
                   {/* Unread dot */}
                   <div className="mt-1.5 shrink-0">
-                    {!n.isRead ? (
-                      <span className="block w-2 h-2 rounded-full bg-event-red" />
-                    ) : (
-                      <span className="block w-2 h-2 rounded-full bg-transparent" />
-                    )}
+                    <span className={`block w-2 h-2 rounded-full ${!n.isRead ? "bg-event-red" : "bg-transparent"}`} />
                   </div>
 
                   {/* Content */}
@@ -246,33 +213,20 @@ export default function NotificationPanel({ currentUser }: Props) {
                         {formatTime(n.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {n.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                      {n.message}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{n.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col items-center gap-1 shrink-0">
-                    {!n.isRead && (
-                      <button
-                        onClick={() => handleMarkRead(n.id)}
-                        title="Mark as read"
-                        className="p-1 text-blue-500 hover:text-blue-700"
-                      >
-                        <FiCheck size={14} />
-                      </button>
-                    )}
+                  {/* Mark read action */}
+                  {!n.isRead && (
                     <button
-                      onClick={() => handleDelete(n.id)}
-                      title="Delete"
-                      className="p-1 text-gray-400 hover:text-red-500"
+                      onClick={() => handleMarkRead(n.id)}
+                      title="Mark as read"
+                      className="p-1 text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
                     >
-                      <FiTrash2 size={14} />
+                      <FiCheck size={14} />
                     </button>
-                  </div>
+                  )}
                 </div>
               ))
             )}

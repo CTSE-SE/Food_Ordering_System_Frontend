@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { FiTrash2, FiCheck, FiCheckCircle, FiRefreshCw } from "react-icons/fi";
+import { FiCheck, FiCheckCircle, FiRefreshCw } from "react-icons/fi";
 import { MdNotificationsNone } from "react-icons/md";
 import { toast } from "react-hot-toast";
 import {
   Notification,
-  deleteAllNotifications,
-  deleteNotification,
   getUserNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -14,22 +12,18 @@ import {
 // ── helpers ────────────────────────────────────────────────────────────────
 
 const TYPE_STYLES: Record<string, { badge: string; border: string }> = {
-  info:      { badge: "bg-blue-100 text-blue-700",   border: "border-l-blue-400" },
-  success:   { badge: "bg-green-100 text-green-700", border: "border-l-green-400" },
+  info:      { badge: "bg-blue-100 text-blue-700",     border: "border-l-blue-400" },
+  success:   { badge: "bg-green-100 text-green-700",   border: "border-l-green-400" },
   warning:   { badge: "bg-yellow-100 text-yellow-700", border: "border-l-yellow-400" },
-  error:     { badge: "bg-red-100 text-red-700",     border: "border-l-red-400" },
+  error:     { badge: "bg-red-100 text-red-700",       border: "border-l-red-400" },
   order:     { badge: "bg-purple-100 text-purple-700", border: "border-l-purple-400" },
   promotion: { badge: "bg-orange-100 text-orange-700", border: "border-l-orange-400" },
 };
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
@@ -41,7 +35,6 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
@@ -60,18 +53,14 @@ export default function Notifications() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   // ── actions ──────────────────────────────────────────────────────────────
 
   const handleMarkRead = async (id: string) => {
     try {
       await markNotificationAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       toast.success("Marked as read");
     } catch {
       toast.error("Failed to mark as read");
@@ -88,35 +77,11 @@ export default function Notifications() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    try {
-      await deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      toast.success("Notification deleted");
-    } catch {
-      toast.error("Failed to delete notification");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (!window.confirm("Clear all notifications? This cannot be undone.")) return;
-    try {
-      await deleteAllNotifications();
-      setNotifications([]);
-      toast.success("All notifications cleared");
-    } catch {
-      toast.error("Failed to clear notifications");
-    }
-  };
-
-  // ── filtered list ─────────────────────────────────────────────────────────
+  // ── derived ──────────────────────────────────────────────────────────────
 
   const filtered = notifications.filter((n) => {
     if (filter === "unread") return !n.isRead;
-    if (filter === "read") return n.isRead;
+    if (filter === "read")   return n.isRead;
     return true;
   });
 
@@ -151,15 +116,6 @@ export default function Notifications() {
             >
               <FiCheckCircle size={15} />
               Mark all read
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-            >
-              <FiTrash2 size={15} />
-              Clear all
             </button>
           )}
         </div>
@@ -202,7 +158,7 @@ export default function Notifications() {
           <p className="text-sm mt-1 opacity-70">
             {filter === "all"
               ? "We'll notify you when something happens"
-              : `Switch to 'all' to see every notification`}
+              : "Switch to 'all' to see every notification"}
           </p>
         </div>
       ) : (
@@ -215,25 +171,19 @@ export default function Notifications() {
             return (
               <div
                 key={n.id}
-                className={`flex items-start gap-4 bg-white rounded-xl border border-gray-100 border-l-4 ${style.border} px-5 py-4 shadow-sm transition-opacity ${
-                  deletingId === n.id ? "opacity-40 pointer-events-none" : ""
-                } ${!n.isRead ? "ring-1 ring-blue-100" : ""}`}
+                className={`flex items-start gap-4 bg-white rounded-xl border border-gray-100 border-l-4 ${style.border} px-5 py-4 shadow-sm ${
+                  !n.isRead ? "ring-1 ring-blue-100" : ""
+                }`}
               >
                 {/* Unread indicator */}
                 <div className="mt-1 shrink-0">
-                  {!n.isRead ? (
-                    <span className="block w-2.5 h-2.5 rounded-full bg-event-red" />
-                  ) : (
-                    <span className="block w-2.5 h-2.5 rounded-full bg-gray-200" />
-                  )}
+                  <span className={`block w-2.5 h-2.5 rounded-full ${!n.isRead ? "bg-event-red" : "bg-gray-200"}`} />
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${style.badge}`}
-                    >
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${style.badge}`}>
                       {n.type}
                     </span>
                     {!n.isRead && (
@@ -241,33 +191,22 @@ export default function Notifications() {
                         NEW
                       </span>
                     )}
-                    <span className="text-xs text-gray-400 ml-auto">
-                      {formatDate(n.createdAt)}
-                    </span>
+                    <span className="text-xs text-gray-400 ml-auto">{formatDate(n.createdAt)}</span>
                   </div>
                   <p className="text-sm font-semibold text-gray-800">{n.title}</p>
                   <p className="text-sm text-gray-500 mt-1">{n.message}</p>
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {!n.isRead && (
-                    <button
-                      onClick={() => handleMarkRead(n.id)}
-                      title="Mark as read"
-                      className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <FiCheck size={15} />
-                    </button>
-                  )}
+                {/* Mark read */}
+                {!n.isRead && (
                   <button
-                    onClick={() => handleDelete(n.id)}
-                    title="Delete"
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    onClick={() => handleMarkRead(n.id)}
+                    title="Mark as read"
+                    className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
                   >
-                    <FiTrash2 size={15} />
+                    <FiCheck size={15} />
                   </button>
-                </div>
+                )}
               </div>
             );
           })}

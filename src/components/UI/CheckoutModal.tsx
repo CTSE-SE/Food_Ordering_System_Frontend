@@ -3,7 +3,6 @@ import { FiMapPin, FiFileText, FiLoader, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { useCartStore } from "@/store/cartStore";
 import { createOrder, ShippingAddress } from "@/api/order.api";
-import { sendOrderConfirmationEmail } from "@/api/email.api";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -78,26 +77,8 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
       const orderId = orderRes.data?.id ?? orderRes.data?.orderId ?? "N/A";
       setPlacedOrderId(orderId);
 
-      // 2. SQS email queue (non-blocking)
-      // Note: in-app notifications are created automatically by the notification
-      // service's SQS consumer when it processes the order.placed event.
-      try {
-        const userStr = localStorage.getItem("user");
-        const user = userStr ? JSON.parse(userStr) : null;
-        if (user?.email) {
-          await sendOrderConfirmationEmail({
-            to: user.email,
-            userName: user.fullName ?? "Customer",
-            orderId,
-            restaurantName: restaurantName ?? "",
-            items: items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
-            totalAmount: total,
-            deliveryAddress: `${addr.street}, ${addr.city}, ${addr.postalCode}, ${addr.country}`,
-          });
-        }
-      } catch {
-        console.warn("Email queue failed — order still placed");
-      }
+      // Email + in-app notification are handled automatically by the
+      // notification service's SQS consumer when it processes order.placed.
 
       clearCart();
       setDone(true);
