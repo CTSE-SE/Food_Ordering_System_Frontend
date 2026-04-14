@@ -1,10 +1,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdMenu, MdClose } from "react-icons/md";
-import { FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
+import { FiLogIn, FiUserPlus, FiLogOut, FiShoppingCart } from "react-icons/fi";
 import logo from "/Images/NavBar/logo.webp?url";
 import ContactInfo from "@/components/UI/ContactInfo";
 import CustomButton from "@/components/UI/Button";
+import NotificationPanel from "@/components/UI/NotificationPanel";
+import { useCartStore } from "@/store/cartStore";
 
 import { toast } from "react-hot-toast";
 import Modal from "@/components/UI/Modal";
@@ -18,23 +20,34 @@ interface NavItem {
 
 const NavItems: NavItem[] = [
   { title: "Home", path: "/", subItems: [] },
-  {
-    title: "Service",
-    path: "/service",
-    subItems: [
-      { title: "Service 1", path: "/service/service1" },
-      { title: "Service 2", path: "/service/service2" },
-    ],
-  },
-  { title: "FAQ", path: "/faq", subItems: [] },
-  { title: "About", path: "/about", subItems: [] },
-  { title: "Contact", path: "/contact", subItems: [] },
+  { title: "about", path: "/#", subItems: [] },
+  { title: "menu", path: "/#", subItems: [] },
+  { title: "contact", path: "/#", subItems: [] },
 ];
 
 interface User {
   role: string;
   fullName: string;
   email: string;
+}
+
+function CartIconButton() {
+  const { totalItems, openCart } = useCartStore();
+  const count = totalItems();
+  return (
+    <button
+      onClick={openCart}
+      className="relative p-2 text-gray-600 hover:text-event-red transition-colors"
+      aria-label="Cart"
+    >
+      <FiShoppingCart size={22} />
+      {count > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-event-red rounded-full leading-none">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </button>
+  );
 }
 
 function NavComponent() {
@@ -229,6 +242,9 @@ function NavComponent() {
         <div className="hidden xl:flex items-center gap-x-4">
           {currentUser ? (
             <>
+              {/* Cart icon */}
+              <CartIconButton />
+              <NotificationPanel currentUser={currentUser} />
               <CustomButton
                 title="Logout"
                 variant="outline"
@@ -338,6 +354,10 @@ function NavComponent() {
           <div className="mt-auto p-4 space-y-2">
             {currentUser ? (
               <>
+                <div className="flex items-center gap-2 pb-2">
+                  <NotificationPanel currentUser={currentUser} />
+                  <span className="text-sm text-gray-600">Notifications</span>
+                </div>
                 <CustomButton
                   title="Logout"
                   variant="outline"

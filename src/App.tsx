@@ -9,6 +9,9 @@ import RestaurantSignUp from "./pages/ResturentSignUp";
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import UserLayout from "./pages/UserDashboard/UserLayout";
 import Profile from "./pages/UserDashboard/Profile";
+import Notifications from "./pages/UserDashboard/Notifications";
+import MyOrders from "./pages/UserDashboard/MyOrders";
+import BrowseMenu from "./pages/UserDashboard/BrowseMenu";
 import Users from "./pages/AdminDashboard/pages/Users";
 import ResturentLayout from "./pages/ResturentDashboard/ResturentLayout";
 import Category from "./pages/ResturentDashboard/pages/Category";
@@ -49,10 +52,11 @@ const UserRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<UserLayout />}>
-        <Route index element={<Navigate to="profile" replace />} />
+        <Route index element={<Navigate to="menu" replace />} />
+        <Route path="menu" element={<BrowseMenu />} />
         <Route path="profile" element={<Profile />} />
-        <Route path="notifications" />
-        <Route path="settings" />
+        <Route path="orders" element={<MyOrders />} />
+        <Route path="notifications" element={<Notifications />} />
       </Route>
     </Routes>
   );
