@@ -20,6 +20,9 @@ interface NavItem {
 
 const NavItems: NavItem[] = [
   { title: "Home", path: "/", subItems: [] },
+  { title: "about", path: "/#", subItems: [] },
+  { title: "menu", path: "/#", subItems: [] },
+  { title: "contact", path: "/#", subItems: [] },
 ];
 
 interface User {

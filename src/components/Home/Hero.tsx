@@ -1,7 +1,19 @@
 import hero from "/Images/Home/hero.webp";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 function Hero() {
+  const navigate = useNavigate();
+
+  const handleBrowseMenu = () => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      navigate("/user-dashboard/menu");
+    } else {
+      navigate("/signin");
+    }
+  };
+
   return (
     <div className="flex flex-col relative justify-center items-center xl:relative xl:items-baseline gap-y-5 xl:gap-y-0 xl:mt-0 w-full font-PlusSans px-[15px] md:px-0 xl:pr-0 max-w-[1920px] mx-auto mt-[15px] md:mt-0">
       <div className="relative w-full">
@@ -43,11 +55,12 @@ function Hero() {
             transition={{ duration: 0.8, ease: "easeOut", delay: 2 }}
             className="mt-8"
           >
-            <a href="#menu">
-              <button className="bg-event-blue hover:bg-blue-700 text-white font-Mainfront px-8 py-3 rounded-lg transition-colors duration-300">
-                Browse Menu
-              </button>
-            </a>
+            <button
+              onClick={handleBrowseMenu}
+              className="bg-event-blue hover:bg-blue-700 text-white font-Mainfront px-8 py-3 rounded-lg transition-colors duration-300"
+            >
+              Browse Menu
+            </button>
           </motion.div>
         </div>
       </div>

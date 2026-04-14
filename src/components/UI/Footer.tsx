@@ -64,10 +64,10 @@ function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4">Contact Us</h3>
             <ul className="space-y-2 text-event-gray">
-              <li>123 Event Street</li>
+              <li>123 Food</li>
               <li>Colombo, Sri Lanka</li>
               <li>Phone: +94 123 456 789</li>
-              <li>Email: info@eventpro.com</li>
+              <li>Email: info@foody.com</li>
             </ul>
           </div>
 
@@ -115,7 +115,7 @@ function Footer() {
         <div className="border-t border-event-white/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-event-gray text-sm">
-              © {new Date().getFullYear()} EventPro. All rights reserved.
+              © {new Date().getFullYear()} Foody. All rights reserved.
             </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <a
