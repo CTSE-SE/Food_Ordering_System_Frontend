@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
-import customFetch from "../../utils/customFetch";
 
 interface User {
   role: string;
@@ -16,16 +15,12 @@ function Hero() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        const { data } = await customFetch.get("/users/current-user");
-        setCurrentUser(data.user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setCurrentUser(null);
-      }
-    };
-    getCurrentUser();
+    try {
+      const userStr = localStorage.getItem("user");
+      setCurrentUser(userStr ? JSON.parse(userStr) : null);
+    } catch {
+      setCurrentUser(null);
+    }
   }, []);
 
   const handlePlanEventClick = (e: React.MouseEvent) => {

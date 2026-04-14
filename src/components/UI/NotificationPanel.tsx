@@ -51,7 +51,7 @@ export default function NotificationPanel({ currentUser }: Props) {
     if (!currentUser) return;
     try {
       const res = await getUnreadCount();
-      if (res?.success) setUnreadCount(res.data?.count ?? 0);
+      if (res?.success) setUnreadCount(res.data?.unreadCount ?? 0);
     } catch {
       // silently ignore – badge just won't update
     }
@@ -63,7 +63,7 @@ export default function NotificationPanel({ currentUser }: Props) {
     try {
       const res = await getUserNotifications();
       if (res?.success) {
-        const data: Notification[] = Array.isArray(res.data) ? res.data : [];
+        const data: Notification[] = Array.isArray(res.notifications) ? res.notifications : [];
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.isRead).length);
       } else {
@@ -106,7 +106,7 @@ export default function NotificationPanel({ currentUser }: Props) {
     try {
       await markNotificationAsRead(id);
       setNotifications((prev) =>
-        (prev ?? []).map((n) => (n._id === id ? { ...n, isRead: true } : n))
+        (prev ?? []).map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch {
@@ -128,8 +128,8 @@ export default function NotificationPanel({ currentUser }: Props) {
   const handleDelete = async (id: string) => {
     try {
       await deleteNotification(id);
-      const deleted = (notifications ?? []).find((n) => n._id === id);
-      setNotifications((prev) => (prev ?? []).filter((n) => n._id !== id));
+      const deleted = (notifications ?? []).find((n) => n.id === id);
+      setNotifications((prev) => (prev ?? []).filter((n) => n.id !== id));
       if (deleted && !deleted.isRead) setUnreadCount((c) => Math.max(0, c - 1));
     } catch {
       toast.error("Failed to delete notification");
@@ -218,7 +218,7 @@ export default function NotificationPanel({ currentUser }: Props) {
             ) : (
               notifications.map((n) => (
                 <div
-                  key={n._id}
+                  key={n.id}
                   className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
                     !n.isRead ? "bg-blue-50/40" : ""
                   }`}
@@ -258,7 +258,7 @@ export default function NotificationPanel({ currentUser }: Props) {
                   <div className="flex flex-col items-center gap-1 shrink-0">
                     {!n.isRead && (
                       <button
-                        onClick={() => handleMarkRead(n._id)}
+                        onClick={() => handleMarkRead(n.id)}
                         title="Mark as read"
                         className="p-1 text-blue-500 hover:text-blue-700"
                       >
@@ -266,7 +266,7 @@ export default function NotificationPanel({ currentUser }: Props) {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(n._id)}
+                      onClick={() => handleDelete(n.id)}
                       title="Delete"
                       className="p-1 text-gray-400 hover:text-red-500"
                     >

@@ -48,7 +48,7 @@ export default function Notifications() {
     try {
       const res = await getUserNotifications();
       if (res?.success) {
-        setNotifications(Array.isArray(res.data) ? res.data : []);
+        setNotifications(Array.isArray(res.notifications) ? res.notifications : []);
       } else {
         setNotifications([]);
       }
@@ -70,7 +70,7 @@ export default function Notifications() {
     try {
       await markNotificationAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       toast.success("Marked as read");
     } catch {
@@ -92,7 +92,7 @@ export default function Notifications() {
     setDeletingId(id);
     try {
       await deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
       toast.success("Notification deleted");
     } catch {
       toast.error("Failed to delete notification");
@@ -214,9 +214,9 @@ export default function Notifications() {
             };
             return (
               <div
-                key={n._id}
+                key={n.id}
                 className={`flex items-start gap-4 bg-white rounded-xl border border-gray-100 border-l-4 ${style.border} px-5 py-4 shadow-sm transition-opacity ${
-                  deletingId === n._id ? "opacity-40 pointer-events-none" : ""
+                  deletingId === n.id ? "opacity-40 pointer-events-none" : ""
                 } ${!n.isRead ? "ring-1 ring-blue-100" : ""}`}
               >
                 {/* Unread indicator */}
@@ -253,7 +253,7 @@ export default function Notifications() {
                 <div className="flex items-center gap-1 shrink-0">
                   {!n.isRead && (
                     <button
-                      onClick={() => handleMarkRead(n._id)}
+                      onClick={() => handleMarkRead(n.id)}
                       title="Mark as read"
                       className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                     >
@@ -261,7 +261,7 @@ export default function Notifications() {
                     </button>
                   )}
                   <button
-                    onClick={() => handleDelete(n._id)}
+                    onClick={() => handleDelete(n.id)}
                     title="Delete"
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >

@@ -31,7 +31,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await customFetch.get("/users/current-user");
+        const { data } = await customFetch.get("/users/profile");
         setProfile(data.user);
         setFormData({
           fullName: data.user.fullName,
@@ -97,7 +97,7 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const { data } = await customFetch.patch("/users/update-user", formData);
+      const { data } = await customFetch.patch("/users/profile", formData);
       setProfile(data.user);
       setIsEditing(false);
       toast.success("Profile updated successfully");
@@ -117,7 +117,7 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const { data } = await customFetch.patch("/users/update-user", formData, {
+      const { data } = await customFetch.patch("/users/profile", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

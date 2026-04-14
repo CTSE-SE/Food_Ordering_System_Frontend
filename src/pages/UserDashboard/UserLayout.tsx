@@ -3,13 +3,15 @@ import {
   FiUser,
   FiBookmark,
   FiBell,
+  FiPackage,
 } from "react-icons/fi";
 import NavBar from "@/components/UI/NavBar";
 
 const menuItems = [
-  { path: "profile", title: "My Profile", icon: <FiUser /> },
-  { path: "bookings", title: "My Bookings", icon: <FiBookmark /> },
+  { path: "profile",       title: "My Profile",    icon: <FiUser /> },
+  { path: "orders",        title: "My Orders",     icon: <FiPackage /> },
   { path: "notifications", title: "Notifications", icon: <FiBell /> },
+  { path: "bookings",      title: "My Bookings",   icon: <FiBookmark /> },
 ];
 
 const UserLayout = () => {
