@@ -11,7 +11,6 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
     items,
     isOpen,
     closeCart,
-    removeItem,
     updateQuantity,
     clearCart,
     restaurantName,
